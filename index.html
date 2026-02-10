@@ -6,8 +6,8 @@
   <title>🧸 Catch My Hugs — For Mim</title>
   <style>
     :root{
-      --bg1:#0b1020; --bg2:#161a2b; --card:rgba(255,255,255,.08);
-      --txt:#eef1ff; --mut:#b8c0ff; --accent:#ff5b8a;
+      --bg1:#0b1020; --bg2:#161a2b; --txt:#eef1ff; --mut:#b8c0ff;
+      --accent:#ff5b8a; --gold:#ffbe4f; --card:rgba(255,255,255,.08);
     }
     *{ box-sizing:border-box; }
     body{
@@ -17,10 +17,12 @@
         radial-gradient(900px 480px at 18% 0%, #2a3566 0%, transparent 58%),
         radial-gradient(900px 520px at 82% 20%, #6b2d52 0%, transparent 55%),
         linear-gradient(180deg, var(--bg1), var(--bg2));
-      display:flex; align-items:center; justify-content:center; padding:16px;
+      display:flex; align-items:center; justify-content:center; padding:14px;
+      overscroll-behavior: none;
+      touch-action: none;
     }
     .wrap{
-      width:min(860px, 100%);
+      width:min(920px, 100%);
       background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.05));
       border:1px solid rgba(255,255,255,.12);
       border-radius:22px;
@@ -28,35 +30,52 @@
       overflow:hidden;
     }
     header{
-      padding:14px 16px 10px;
-      display:flex; gap:12px; align-items:center; justify-content:space-between;
+      padding:12px 14px 10px;
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
       flex-wrap:wrap;
     }
     .title{ display:flex; flex-direction:column; gap:4px; }
     h1{ margin:0; font-size:18px; letter-spacing:.2px; }
-    .sub{ margin:0; color:var(--mut); font-size:13px; line-height:1.4; }
+    .sub{ margin:0; color:var(--mut); font-size:13px; line-height:1.35; }
+    .topRight{
+      display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;
+    }
     .pill{
       background: rgba(255,255,255,.10);
       border:1px solid rgba(255,255,255,.14);
       padding:8px 10px; border-radius:999px;
-      font-weight:700; font-size:13px;
+      font-weight:800; font-size:13px;
       display:flex; gap:8px; align-items:center;
+      user-select:none;
     }
+    .hearts{
+      display:flex; gap:6px; align-items:center; padding:8px 10px;
+      border-radius:999px; background: rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.14);
+      user-select:none;
+      font-weight:800; font-size:13px;
+    }
+    .hearts span{ font-size:16px; line-height:1; }
+
     .bar{
-      display:flex; gap:10px; align-items:center; padding:0 16px 12px;
+      display:flex; gap:10px; align-items:center; padding:0 14px 12px;
       flex-wrap:wrap;
     }
     .btn{
       appearance:none; border:none; cursor:pointer;
-      padding:10px 12px; border-radius:14px; font-weight:800;
+      padding:10px 12px; border-radius:14px; font-weight:900;
       background: rgba(255,255,255,.10);
       border:1px solid rgba(255,255,255,.14);
       color:var(--txt);
     }
     .btn:active{ transform: scale(.99); }
     .btn.primary{
-      background: linear-gradient(135deg, var(--accent), #ffbe4f);
+      background: linear-gradient(135deg, var(--accent), var(--gold));
       color:#1a1020; border:none;
+    }
+    .btn.on{
+      outline: 2px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.14);
     }
     .hint{ color:var(--mut); font-size:13px; }
     .gameArea{
@@ -64,215 +83,456 @@
       background: rgba(0,0,0,.18);
       border-top:1px solid rgba(255,255,255,.10);
     }
-    canvas{ display:block; width:100%; height:60vh; max-height:560px; }
+    canvas{
+      display:block;
+      width:100%;
+      height:62vh;
+      max-height:620px;
+      touch-action:none;
+    }
     .overlayMsg{
       position:absolute; inset:0;
       display:flex; align-items:center; justify-content:center;
       pointer-events:none;
-      font-weight:900; font-size:22px;
+      font-weight:1000; font-size:22px;
       text-shadow: 0 10px 30px rgba(0,0,0,.65);
       opacity:0; transform: translateY(6px);
       transition: opacity .18s ease, transform .18s ease;
       padding:18px; text-align:center;
     }
     .overlayMsg.show{ opacity:1; transform: translateY(0); }
-    footer{
-      padding:12px 16px 16px;
-      color:var(--mut); font-size:13px; line-height:1.5;
+
+    /* Game Over modal */
+    .modal{
+      position:fixed; inset:0;
+      display:none; align-items:center; justify-content:center;
+      background: rgba(0,0,0,.65);
+      padding:16px;
     }
-    .strong{ color:var(--txt); font-weight:800; }
+    .modalBox{
+      width:min(560px, 100%);
+      background: #0e1426;
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:18px;
+      padding:16px;
+      box-shadow: 0 18px 80px rgba(0,0,0,.65);
+    }
+    .modalBox h2{ margin:0 0 8px; font-size:20px; }
+    .modalBox p{ margin:0 0 10px; color:var(--mut); line-height:1.6; }
+    .modalRow{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin-top:12px; }
+    .strong{ color:var(--txt); font-weight:900; }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
+  <div class="wrap" id="wrap">
     <header>
       <div class="title">
         <h1>🧸 Catch My Hugs, Mim</h1>
-        <p class="sub">Move the basket. Catch teddies to collect hugs. Made with code by <span class="strong">Turjo</span>.</p>
+        <p class="sub">Drag to move. Catch 🧸 = hug ❤️. Miss = lose a heart. Made with code by <span class="strong">Turjo</span>.</p>
       </div>
-      <div class="pill">❤️ Hugs: <span id="score">0</span></div>
+
+      <div class="topRight">
+        <div class="pill">❤️ Hugs: <span id="score">0</span></div>
+        <div class="hearts" id="heartsBox">Health:
+          <span id="h1">❤️</span><span id="h2">❤️</span><span id="h3">❤️</span><span id="h4">❤️</span><span id="h5">❤️</span>
+        </div>
+      </div>
     </header>
 
     <div class="bar">
       <button class="btn primary" id="startBtn">Start</button>
       <button class="btn" id="resetBtn">Reset</button>
-      <span class="hint">Tip: On phone, drag your finger left/right.</span>
+      <button class="btn" id="musicBtn">Music: Off</button>
+      <button class="btn" id="fsBtn">Fullscreen</button>
+      <span class="hint">Mobile: drag your finger left/right. (Sound needs phone unmuted.)</span>
     </div>
 
     <div class="gameArea">
       <div class="overlayMsg" id="msg"></div>
       <canvas id="c"></canvas>
     </div>
-
-    <footer>
-      When you miss me, play this for 30 seconds and count the hugs.  
-      If you reach <span class="strong">20 hugs</span>… open WhatsApp and tell me: “I caught them all.” 🧸❤️
-    </footer>
   </div>
 
-  <script>
-    const canvas = document.getElementById("c");
-    const ctx = canvas.getContext("2d");
+  <div class="modal" id="modal">
+    <div class="modalBox">
+      <h2 id="modalTitle">Game Over</h2>
+      <p id="modalText"></p>
+      <div class="modalRow">
+        <button class="btn" id="closeBtn">Close</button>
+        <button class="btn primary" id="playAgainBtn">Play Again</button>
+      </div>
+    </div>
+  </div>
 
-    function resize(){
-      const rect = canvas.getBoundingClientRect();
-      const dpr = Math.max(1, window.devicePixelRatio || 1);
-      canvas.width = Math.floor(rect.width * dpr);
-      canvas.height = Math.floor(rect.height * dpr);
-      ctx.setTransform(dpr,0,0,dpr,0,0);
+<script>
+(() => {
+  // ---------- Canvas / HiDPI ----------
+  const canvas = document.getElementById("c");
+  const ctx = canvas.getContext("2d");
+  function resize(){
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width = Math.floor(rect.width * dpr);
+    canvas.height = Math.floor(rect.height * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener("resize", resize);
+
+  // ---------- UI ----------
+  const scoreEl = document.getElementById("score");
+  const msgEl = document.getElementById("msg");
+  const startBtn = document.getElementById("startBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const musicBtn = document.getElementById("musicBtn");
+  const fsBtn = document.getElementById("fsBtn");
+
+  const modal = document.getElementById("modal");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalText = document.getElementById("modalText");
+  const closeBtn = document.getElementById("closeBtn");
+  const playAgainBtn = document.getElementById("playAgainBtn");
+
+  const heartEls = [
+    document.getElementById("h1"),
+    document.getElementById("h2"),
+    document.getElementById("h3"),
+    document.getElementById("h4"),
+    document.getElementById("h5"),
+  ];
+
+  function showMsg(text){
+    msgEl.textContent = text;
+    msgEl.classList.add("show");
+    clearTimeout(showMsg._t);
+    showMsg._t = setTimeout(()=> msgEl.classList.remove("show"), 650);
+  }
+
+  function setHearts(n){
+    for(let i=0;i<5;i++){
+      heartEls[i].textContent = i < n ? "❤️" : "🖤";
     }
-    window.addEventListener("resize", resize);
+  }
 
-    const scoreEl = document.getElementById("score");
-    const msgEl = document.getElementById("msg");
-    const startBtn = document.getElementById("startBtn");
-    const resetBtn = document.getElementById("resetBtn");
-
-    let running = false;
-    const basket = { x: 0, y: 0, w: 110, h: 26 };
-
-    let teddies = [];
-    let score = 0;
-    let lastSpawn = 0;
-    let spawnEvery = 850;
-    let lastTime = 0;
-
-    function showMsg(text){
-      msgEl.textContent = text;
-      msgEl.classList.add("show");
-      clearTimeout(showMsg._t);
-      showMsg._t = setTimeout(()=> msgEl.classList.remove("show"), 700);
-    }
-
-    function resetGame(){
-      teddies = [];
-      score = 0;
-      scoreEl.textContent = score;
-      running = false;
-      startBtn.textContent = "Start";
-      showMsg("Ready when you are 🧸");
-      draw();
-    }
-
-    function addScore(){
-      score++;
-      scoreEl.textContent = score;
-
-      if(score === 10) showMsg("10 hugs delivered 🤗");
-      else if(score === 20) showMsg("20 hugs! Message me: “I caught them all.” ❤️");
-      else {
-        const lines = ["Hug sent 🤗","Delivered 🧸","Miss you ❤️","Another hug"];
-        showMsg(lines[Math.floor(Math.random()*lines.length)]);
+  // ---------- Fullscreen ----------
+  async function requestFS(){
+    const el = document.getElementById("wrap");
+    try{
+      if(!document.fullscreenElement && el.requestFullscreen){
+        await el.requestFullscreen();
       }
+    }catch(e){ /* ignore */ }
+  }
+  fsBtn.addEventListener("click", requestFS);
+
+  // ---------- Vibration ----------
+  function vibe(ms){
+    try{
+      if(navigator.vibrate) navigator.vibrate(ms);
+    }catch(e){ /* ignore */ }
+  }
+
+  // ---------- Background "romantic" music (WebAudio, no external file) ----------
+  // Simple soft chord loop using sine waves + gentle fade.
+  let audioCtx = null;
+  let musicOn = false;
+  let musicTimer = null;
+  let master = null;
+
+  function ensureAudio(){
+    if(!audioCtx){
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      master = audioCtx.createGain();
+      master.gain.value = 0.0;
+      master.connect(audioCtx.destination);
     }
+  }
 
-    function spawnTeddy(){
-      const w = canvas.getBoundingClientRect().width;
-      teddies.push({
-        x: Math.random() * (w - 30),
-        y: -40,
-        vy: 2.2 + Math.random()*2.2
-      });
-    }
+  function playChord(freqs, duration=1.6){
+    if(!audioCtx || !master) return;
+    const now = audioCtx.currentTime;
 
-    function update(now){
-      if(!running) return;
+    // create 3 oscillators
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.0, now);
+    gain.gain.linearRampToValueAtTime(0.12, now + 0.08);
+    gain.gain.linearRampToValueAtTime(0.0, now + duration);
+    gain.connect(master);
 
-      if(now - lastSpawn > spawnEvery){
-        spawnTeddy();
-        lastSpawn = now;
-        if(spawnEvery > 520) spawnEvery -= 5;
-      }
-
-      const h = canvas.getBoundingClientRect().height;
-
-      for(let i = teddies.length - 1; i >= 0; i--){
-        const t = teddies[i];
-        t.y += t.vy;
-
-        const inX = (t.x + 12) > basket.x && (t.x + 12) < (basket.x + basket.w);
-        const inY = (t.y + 18) > basket.y && (t.y + 18) < (basket.y + basket.h);
-        if(inX && inY){
-          teddies.splice(i,1);
-          addScore();
-          continue;
-        }
-
-        if(t.y > h + 50){
-          teddies.splice(i,1);
-          showMsg("You missed my hug 🥺");
-        }
-      }
-    }
-
-    function draw(){
-      const w = canvas.getBoundingClientRect().width;
-      const h = canvas.getBoundingClientRect().height;
-
-      ctx.clearRect(0,0,w,h);
-
-      ctx.globalAlpha = 0.22;
-      for(let i=0;i<40;i++){
-        const x = (i*97)%w;
-        const y = (i*53)%h;
-        ctx.fillRect(x, y, 2, 2);
-      }
-      ctx.globalAlpha = 1;
-
-      basket.y = h - 52;
-
-      ctx.fillStyle = "rgba(255,91,138,.95)";
-      ctx.fillRect(basket.x, basket.y, basket.w, basket.h);
-      ctx.fillStyle = "rgba(255,255,255,.18)";
-      ctx.fillRect(basket.x, basket.y, basket.w, 6);
-
-      ctx.font = "28px system-ui, Apple Color Emoji, Segoe UI Emoji";
-      for(const t of teddies){
-        ctx.fillText("🧸", t.x, t.y);
-      }
-
-      if(!running){
-        ctx.font = "16px system-ui";
-        ctx.fillStyle = "rgba(255,255,255,.75)";
-        ctx.textAlign = "center";
-        ctx.fillText("Tap Start, then catch teddies to collect hugs ❤️", w/2, h/2);
-        ctx.textAlign = "left";
-      }
-    }
-
-    function loop(now){
-      if(!lastTime) lastTime = now;
-      update(now);
-      draw();
-      requestAnimationFrame(loop);
-    }
-
-    function setBasketX(clientX){
-      const rect = canvas.getBoundingClientRect();
-      const x = clientX - rect.left;
-      basket.x = Math.max(8, Math.min(rect.width - basket.w - 8, x - basket.w/2));
-    }
-
-    canvas.addEventListener("mousemove", (e)=> setBasketX(e.clientX));
-    canvas.addEventListener("touchstart", (e)=> { e.preventDefault(); setBasketX(e.touches[0].clientX); }, {passive:false});
-    canvas.addEventListener("touchmove", (e)=> { e.preventDefault(); setBasketX(e.touches[0].clientX); }, {passive:false});
-
-    startBtn.addEventListener("click", ()=>{
-      running = !running;
-      startBtn.textContent = running ? "Pause" : "Start";
-      showMsg(running ? "Go! Catch the hugs 🤗" : "Paused 🧸");
+    freqs.forEach(f => {
+      const osc = audioCtx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(f, now);
+      osc.connect(gain);
+      osc.start(now);
+      osc.stop(now + duration + 0.05);
     });
+  }
 
-    resetBtn.addEventListener("click", ()=>{
-      spawnEvery = 850;
-      lastSpawn = 0;
-      resetGame();
+  const prog = [
+    [261.63, 329.63, 392.00], // C
+    [293.66, 369.99, 440.00], // Dm-ish
+    [329.63, 415.30, 493.88], // Em-ish
+    [349.23, 440.00, 523.25], // F-ish
+  ];
+  let progIdx = 0;
+
+  function startMusic(){
+    ensureAudio();
+    // resume on mobile
+    audioCtx.resume?.();
+
+    // fade in
+    const now = audioCtx.currentTime;
+    master.gain.cancelScheduledValues(now);
+    master.gain.setValueAtTime(master.gain.value, now);
+    master.gain.linearRampToValueAtTime(0.9, now + 0.25);
+
+    clearInterval(musicTimer);
+    progIdx = 0;
+    musicTimer = setInterval(() => {
+      playChord(prog[progIdx], 1.7);
+      progIdx = (progIdx + 1) % prog.length;
+    }, 1700);
+
+    musicOn = true;
+    musicBtn.textContent = "Music: On";
+    musicBtn.classList.add("on");
+  }
+
+  function stopMusic(){
+    if(!audioCtx || !master) return;
+    const now = audioCtx.currentTime;
+    master.gain.cancelScheduledValues(now);
+    master.gain.setValueAtTime(master.gain.value, now);
+    master.gain.linearRampToValueAtTime(0.0, now + 0.25);
+
+    clearInterval(musicTimer);
+    musicTimer = null;
+
+    musicOn = false;
+    musicBtn.textContent = "Music: Off";
+    musicBtn.classList.remove("on");
+  }
+
+  musicBtn.addEventListener("click", () => {
+    if(musicOn) stopMusic();
+    else startMusic();
+  });
+
+  // ---------- Game ----------
+  let running = false;
+  let score = 0;
+  let health = 5;
+
+  const basket = { x: 0, y: 0, w: 110, h: 26 };
+  let teddies = [];
+  let lastSpawn = 0;
+
+  // Difficulty (normal -> harder)
+  let spawnEvery = 900;    // ms (decreases)
+  let baseSpeed = 2.2;     // increases
+  let speedBoost = 0;      // increases with score
+  let lastTime = 0;
+
+  function resetGame(){
+    teddies = [];
+    score = 0;
+    health = 5;
+    spawnEvery = 900;
+    baseSpeed = 2.2;
+    speedBoost = 0;
+    lastSpawn = 0;
+    scoreEl.textContent = score;
+    setHearts(health);
+    running = false;
+    startBtn.textContent = "Start";
+    showMsg("Ready when you are 🧸");
+    draw();
+  }
+
+  function spawnTeddy(){
+    const w = canvas.getBoundingClientRect().width;
+    const speed = baseSpeed + (Math.random()*1.4) + speedBoost;
+    teddies.push({
+      x: Math.random() * (w - 30),
+      y: -45,
+      vy: speed
     });
+  }
 
-    resize();
-    resetGame();
+  function makeHarder(){
+    // Smooth ramp: every 5 points, slightly harder
+    if(score % 5 === 0){
+      spawnEvery = Math.max(420, spawnEvery - 50);
+      speedBoost = Math.min(3.2, speedBoost + 0.28);
+      if(score === 10) showMsg("Harder mode শুরু 🔥 (Level up!)");
+      else if(score === 20) showMsg("এখন তো তুমি pro 😄 Keep going!");
+    }
+  }
+
+  function gameOver(){
+    running = false;
+    startBtn.textContent = "Start";
+
+    const bangla =
+      `Mim, তুমি ${score}টা hug ধরেছো! 🧸❤️`;
+    const english =
+      `You caught ${score} hugs. I’m proud of you.`;
+
+    modalTitle.textContent = "Game Over 🖤";
+    modalText.textContent =
+      `${bangla}  ${english}  \n\n` +
+      `Turjo বলছে: “এবার WhatsApp এ লিখো— I caught them all!”`;
+    modal.style.display = "flex";
+  }
+
+  function addScore(){
+    score++;
+    scoreEl.textContent = score;
+    vibe(40); // catch vibration
+
+    if(score === 10) showMsg("10 hugs delivered 🤗");
+    else if(score === 20) showMsg("20 hugs! Message me: “I caught them all.” ❤️");
+    else {
+      const lines = ["Hug sent 🤗","Delivered 🧸","Miss you ❤️","Another hug"];
+      showMsg(lines[Math.floor(Math.random()*lines.length)]);
+    }
+    makeHarder();
+  }
+
+  function loseHeart(){
+    health--;
+    setHearts(health);
+    vibe(80);
+    if(health <= 0){
+      showMsg("No hearts left 🖤");
+      gameOver();
+    }else{
+      showMsg(`Miss! Heart lost 💔 (${health} left)`);
+    }
+  }
+
+  function update(now){
+    if(!running) return;
+
+    if(now - lastSpawn > spawnEvery){
+      spawnTeddy();
+      lastSpawn = now;
+    }
+
+    const h = canvas.getBoundingClientRect().height;
+
+    for(let i = teddies.length - 1; i >= 0; i--){
+      const t = teddies[i];
+      t.y += t.vy;
+
+      // collision
+      const inX = (t.x + 12) > basket.x && (t.x + 12) < (basket.x + basket.w);
+      const inY = (t.y + 18) > basket.y && (t.y + 18) < (basket.y + basket.h);
+      if(inX && inY){
+        teddies.splice(i,1);
+        addScore();
+        continue;
+      }
+
+      // missed
+      if(t.y > h + 60){
+        teddies.splice(i,1);
+        loseHeart();
+      }
+    }
+  }
+
+  function draw(){
+    const w = canvas.getBoundingClientRect().width;
+    const h = canvas.getBoundingClientRect().height;
+
+    ctx.clearRect(0,0,w,h);
+
+    // subtle stars
+    ctx.globalAlpha = 0.22;
+    for(let i=0;i<44;i++){
+      const x = (i*97)%w;
+      const y = (i*53)%h;
+      ctx.fillRect(x, y, 2, 2);
+    }
+    ctx.globalAlpha = 1;
+
+    // basket
+    basket.y = h - 52;
+    ctx.fillStyle = "rgba(255,91,138,.95)";
+    ctx.fillRect(basket.x, basket.y, basket.w, basket.h);
+    ctx.fillStyle = "rgba(255,255,255,.18)";
+    ctx.fillRect(basket.x, basket.y, basket.w, 6);
+
+    // teddies
+    ctx.font = "28px system-ui, Apple Color Emoji, Segoe UI Emoji";
+    for(const t of teddies){
+      ctx.fillText("🧸", t.x, t.y);
+    }
+
+    // idle prompt
+    if(!running){
+      ctx.font = "16px system-ui";
+      ctx.fillStyle = "rgba(255,255,255,.78)";
+      ctx.textAlign = "center";
+      ctx.fillText("Tap Start, then catch teddies to collect hugs ❤️", w/2, h/2);
+      ctx.textAlign = "left";
+    }
+  }
+
+  function loop(now){
+    if(!lastTime) lastTime = now;
+    update(now);
+    draw();
     requestAnimationFrame(loop);
-  </script>
+  }
+
+  // Controls: touch + mouse
+  function setBasketX(clientX){
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    basket.x = Math.max(8, Math.min(rect.width - basket.w - 8, x - basket.w/2));
+  }
+
+  canvas.addEventListener("mousemove", (e)=> setBasketX(e.clientX));
+  canvas.addEventListener("touchstart", (e)=> { e.preventDefault(); setBasketX(e.touches[0].clientX); }, {passive:false});
+  canvas.addEventListener("touchmove", (e)=> { e.preventDefault(); setBasketX(e.touches[0].clientX); }, {passive:false});
+
+  // Buttons
+  startBtn.addEventListener("click", async () => {
+    // Fullscreen auto attempt on Start
+    await requestFS();
+
+    // Mobile audio requires user gesture -> Start is a gesture
+    if(musicOn && audioCtx) audioCtx.resume?.();
+
+    running = !running;
+    startBtn.textContent = running ? "Pause" : "Start";
+    showMsg(running ? "Go! Catch the hugs 🤗" : "Paused 🧸");
+  });
+
+  resetBtn.addEventListener("click", () => {
+    resetGame();
+  });
+
+  // Modal buttons
+  function closeModal(){ modal.style.display = "none"; }
+  closeBtn.addEventListener("click", closeModal);
+  playAgainBtn.addEventListener("click", () => {
+    closeModal();
+    resetGame();
+    showMsg("Let’s go again 🧸❤️");
+  });
+  modal.addEventListener("click", (e) => { if(e.target === modal) closeModal(); });
+
+  // Start
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+})();
+</script>
 </body>
 </html>
