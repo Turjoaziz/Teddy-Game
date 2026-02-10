@@ -7,7 +7,7 @@
   <style>
     :root{
       --bg1:#0b1020; --bg2:#161a2b; --txt:#eef1ff; --mut:#b8c0ff;
-      --accent:#ff5b8a; --gold:#ffbe4f; --card:rgba(255,255,255,.08);
+      --accent:#ff5b8a; --gold:#ffbe4f;
     }
     *{ box-sizing:border-box; }
     body{
@@ -44,7 +44,7 @@
       background: rgba(255,255,255,.10);
       border:1px solid rgba(255,255,255,.14);
       padding:8px 10px; border-radius:999px;
-      font-weight:800; font-size:13px;
+      font-weight:900; font-size:13px;
       display:flex; gap:8px; align-items:center;
       user-select:none;
     }
@@ -53,7 +53,7 @@
       border-radius:999px; background: rgba(255,255,255,.10);
       border:1px solid rgba(255,255,255,.14);
       user-select:none;
-      font-weight:800; font-size:13px;
+      font-weight:900; font-size:13px;
     }
     .hearts span{ font-size:16px; line-height:1; }
 
@@ -63,7 +63,7 @@
     }
     .btn{
       appearance:none; border:none; cursor:pointer;
-      padding:10px 12px; border-radius:14px; font-weight:900;
+      padding:10px 12px; border-radius:14px; font-weight:1000;
       background: rgba(255,255,255,.10);
       border:1px solid rgba(255,255,255,.14);
       color:var(--txt);
@@ -102,7 +102,6 @@
     }
     .overlayMsg.show{ opacity:1; transform: translateY(0); }
 
-    /* Game Over modal */
     .modal{
       position:fixed; inset:0;
       display:none; align-items:center; justify-content:center;
@@ -118,9 +117,9 @@
       box-shadow: 0 18px 80px rgba(0,0,0,.65);
     }
     .modalBox h2{ margin:0 0 8px; font-size:20px; }
-    .modalBox p{ margin:0 0 10px; color:var(--mut); line-height:1.6; }
+    .modalBox p{ margin:0 0 10px; color:var(--mut); line-height:1.6; white-space:pre-wrap; }
     .modalRow{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin-top:12px; }
-    .strong{ color:var(--txt); font-weight:900; }
+    .strong{ color:var(--txt); font-weight:1000; }
   </style>
 </head>
 
@@ -129,12 +128,12 @@
     <header>
       <div class="title">
         <h1>🧸 Catch My Hugs, Mim</h1>
-        <p class="sub">Drag to move. Catch 🧸 = hug ❤️. Miss = lose a heart. Made with code by <span class="strong">Turjo</span>.</p>
+        <p class="sub">Drag to move. Catch 🧸 = hug ❤️. Miss = lose a heart. Princess mode 👸🧺 • Made by <span class="strong">Turjo</span>.</p>
       </div>
 
       <div class="topRight">
         <div class="pill">❤️ Hugs: <span id="score">0</span></div>
-        <div class="hearts" id="heartsBox">Health:
+        <div class="hearts">Health:
           <span id="h1">❤️</span><span id="h2">❤️</span><span id="h3">❤️</span><span id="h4">❤️</span><span id="h5">❤️</span>
         </div>
       </div>
@@ -227,13 +226,10 @@
 
   // ---------- Vibration ----------
   function vibe(ms){
-    try{
-      if(navigator.vibrate) navigator.vibrate(ms);
-    }catch(e){ /* ignore */ }
+    try{ if(navigator.vibrate) navigator.vibrate(ms); } catch(e){}
   }
 
-  // ---------- Background "romantic" music (WebAudio, no external file) ----------
-  // Simple soft chord loop using sine waves + gentle fade.
+  // ---------- Background music (WebAudio chord loop, no external file) ----------
   let audioCtx = null;
   let musicOn = false;
   let musicTimer = null;
@@ -252,7 +248,6 @@
     if(!audioCtx || !master) return;
     const now = audioCtx.currentTime;
 
-    // create 3 oscillators
     const gain = audioCtx.createGain();
     gain.gain.setValueAtTime(0.0, now);
     gain.gain.linearRampToValueAtTime(0.12, now + 0.08);
@@ -279,10 +274,8 @@
 
   function startMusic(){
     ensureAudio();
-    // resume on mobile
     audioCtx.resume?.();
 
-    // fade in
     const now = audioCtx.currentTime;
     master.gain.cancelScheduledValues(now);
     master.gain.setValueAtTime(master.gain.value, now);
@@ -325,14 +318,17 @@
   let score = 0;
   let health = 5;
 
-  const basket = { x: 0, y: 0, w: 110, h: 26 };
+  // Princess catcher: emoji render + collision box
+  // w/h are collision box sizes (not emoji font size)
+  const basket = { x: 0, y: 0, w: 70, h: 42 };
+
   let teddies = [];
   let lastSpawn = 0;
 
   // Difficulty (normal -> harder)
-  let spawnEvery = 900;    // ms (decreases)
+  let spawnEvery = 900;    // ms decreases
   let baseSpeed = 2.2;     // increases
-  let speedBoost = 0;      // increases with score
+  let speedBoost = 0;      // increases
   let lastTime = 0;
 
   function resetGame(){
@@ -356,13 +352,12 @@
     const speed = baseSpeed + (Math.random()*1.4) + speedBoost;
     teddies.push({
       x: Math.random() * (w - 30),
-      y: -45,
+      y: -50,
       vy: speed
     });
   }
 
   function makeHarder(){
-    // Smooth ramp: every 5 points, slightly harder
     if(score % 5 === 0){
       spawnEvery = Math.max(420, spawnEvery - 50);
       speedBoost = Math.min(3.2, speedBoost + 0.28);
@@ -375,14 +370,12 @@
     running = false;
     startBtn.textContent = "Start";
 
-    const bangla =
-      `Mim, তুমি ${score}টা hug ধরেছো! 🧸❤️`;
-    const english =
-      `You caught ${score} hugs. I’m proud of you.`;
+    const bangla = `Mim, তুমি ${score}টা hug ধরেছো! 🧸❤️`;
+    const english = `You caught ${score} hugs. I’m proud of you.`;
 
     modalTitle.textContent = "Game Over 🖤";
     modalText.textContent =
-      `${bangla}  ${english}  \n\n` +
+      `${bangla}  ${english}\n\n` +
       `Turjo বলছে: “এবার WhatsApp এ লিখো— I caught them all!”`;
     modal.style.display = "flex";
   }
@@ -390,7 +383,7 @@
   function addScore(){
     score++;
     scoreEl.textContent = score;
-    vibe(40); // catch vibration
+    vibe(40);
 
     if(score === 10) showMsg("10 hugs delivered 🤗");
     else if(score === 20) showMsg("20 hugs! Message me: “I caught them all.” ❤️");
@@ -427,17 +420,22 @@
       const t = teddies[i];
       t.y += t.vy;
 
-      // collision
-      const inX = (t.x + 12) > basket.x && (t.x + 12) < (basket.x + basket.w);
-      const inY = (t.y + 18) > basket.y && (t.y + 18) < (basket.y + basket.h);
+      // collision area inside princess+basket emoji
+      const hitX1 = basket.x + 14;
+      const hitX2 = basket.x + 14 + basket.w;
+      const hitY1 = basket.y + 10;
+      const hitY2 = basket.y + 10 + basket.h;
+
+      const inX = (t.x + 14) > hitX1 && (t.x + 14) < hitX2;
+      const inY = (t.y + 20) > hitY1 && (t.y + 20) < hitY2;
+
       if(inX && inY){
         teddies.splice(i,1);
         addScore();
         continue;
       }
 
-      // missed
-      if(t.y > h + 60){
+      if(t.y > h + 70){
         teddies.splice(i,1);
         loseHeart();
       }
@@ -450,7 +448,7 @@
 
     ctx.clearRect(0,0,w,h);
 
-    // subtle stars
+    // stars
     ctx.globalAlpha = 0.22;
     for(let i=0;i<44;i++){
       const x = (i*97)%w;
@@ -459,20 +457,19 @@
     }
     ctx.globalAlpha = 1;
 
-    // basket
-    basket.y = h - 52;
-    ctx.fillStyle = "rgba(255,91,138,.95)";
-    ctx.fillRect(basket.x, basket.y, basket.w, basket.h);
-    ctx.fillStyle = "rgba(255,255,255,.18)";
-    ctx.fillRect(basket.x, basket.y, basket.w, 6);
+    // Princess catcher (emoji)
+    basket.y = h - 70;
+    ctx.font = "46px system-ui, Apple Color Emoji, Segoe UI Emoji";
+    ctx.textAlign = "left";
+    ctx.fillText("👸🧺", basket.x, basket.y + 46);
 
-    // teddies
-    ctx.font = "28px system-ui, Apple Color Emoji, Segoe UI Emoji";
+    // Teddies
+    ctx.font = "30px system-ui, Apple Color Emoji, Segoe UI Emoji";
     for(const t of teddies){
       ctx.fillText("🧸", t.x, t.y);
     }
 
-    // idle prompt
+    // Idle prompt
     if(!running){
       ctx.font = "16px system-ui";
       ctx.fillStyle = "rgba(255,255,255,.78)";
@@ -489,11 +486,14 @@
     requestAnimationFrame(loop);
   }
 
-  // Controls: touch + mouse
+  // Controls
   function setBasketX(clientX){
     const rect = canvas.getBoundingClientRect();
     const x = clientX - rect.left;
-    basket.x = Math.max(8, Math.min(rect.width - basket.w - 8, x - basket.w/2));
+    // keep emoji within bounds (tweak margin for emoji width)
+    const minX = 8;
+    const maxX = rect.width - 110;
+    basket.x = Math.max(minX, Math.min(maxX, x - 55));
   }
 
   canvas.addEventListener("mousemove", (e)=> setBasketX(e.clientX));
@@ -502,28 +502,23 @@
 
   // Buttons
   startBtn.addEventListener("click", async () => {
-    // Fullscreen auto attempt on Start
-    await requestFS();
-
-    // Mobile audio requires user gesture -> Start is a gesture
-    if(musicOn && audioCtx) audioCtx.resume?.();
+    await requestFS();           // auto fullscreen attempt
+    if(musicOn && audioCtx) audioCtx.resume?.(); // ensure audio on mobile
 
     running = !running;
     startBtn.textContent = running ? "Pause" : "Start";
     showMsg(running ? "Go! Catch the hugs 🤗" : "Paused 🧸");
   });
 
-  resetBtn.addEventListener("click", () => {
-    resetGame();
-  });
+  resetBtn.addEventListener("click", resetGame);
 
-  // Modal buttons
+  // Modal
   function closeModal(){ modal.style.display = "none"; }
   closeBtn.addEventListener("click", closeModal);
   playAgainBtn.addEventListener("click", () => {
     closeModal();
     resetGame();
-    showMsg("Let’s go again 🧸❤️");
+    showMsg("Princess mode আবার শুরু 👸🧺");
   });
   modal.addEventListener("click", (e) => { if(e.target === modal) closeModal(); });
 
@@ -531,7 +526,6 @@
   resize();
   resetGame();
   requestAnimationFrame(loop);
-
 })();
 </script>
 </body>
